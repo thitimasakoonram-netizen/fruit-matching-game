@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เกมจับคู่ภาพผลไม้</title>
+    <title>เกมจับคู่ภาพผลไม้ (Accessible Screen Reader)</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Kanit', 'Tahoma', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         body {
@@ -19,6 +21,8 @@
             justify-content: center;
             align-items: center;
             padding: 20px 0;
+            overflow: hidden;
+            touch-action: none;
         }
 
         .screen {
@@ -54,12 +58,14 @@
             font-size: 20px;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s, background-color 0.2s;
+            transition: transform 0.15s ease;
         }
 
-        .btn-main:focus, .btn-main:hover {
-            outline: 4px solid #ff9800;
+        /* กรอบโฟกัสตอนปัดเจอหน้าแรก */
+        .btn-main.focused {
+            outline: 6px solid #ff9800 !important;
             outline-offset: 2px;
+            transform: scale(1.05);
         }
 
         /* หน้า Match Screen */
@@ -69,7 +75,6 @@
             padding: 10px;
         }
 
-        /* เลย์เอาต์ตามอัตราส่วน Figma */
         .game-grid {
             display: flex;
             gap: 16px;
@@ -89,7 +94,6 @@
             gap: 13.33px;
         }
 
-        /* ปุ่มรูปภาพ (ขนาด 114x114 px ตาม Figma) */
         .img-card {
             width: 114px;
             height: 114px;
@@ -103,7 +107,6 @@
             pointer-events: none;
         }
 
-        /* ปุ่มบัตรคำ (ขนาด 114x45 px ตาม Figma) */
         .word-card {
             width: 114px;
             height: 45px;
@@ -112,63 +115,37 @@
             color: #333;
         }
 
-        /* ปุ่มพื้นฐาน */
         .card-btn {
             background: white;
             border: 2px solid transparent;
             border-radius: 12px;
-            cursor: pointer;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
             align-items: center;
             transition: all 0.15s ease;
+            pointer-events: none;
         }
 
-        .card-btn:focus {
-            outline: 4px solid #0056b3;
+        .card-btn.focused {
+            outline: 6px solid #ff9800 !important;
             outline-offset: 2px;
+            transform: scale(1.05);
         }
 
-        /* สถานะเมื่อกดปุ่ม */
         .card-btn.selected {
-            border: 3px solid #2196F3 !important;
+            border: 4px solid #2196F3 !important;
             background-color: #e3f2fd;
         }
 
         .card-btn.correct {
-            border: 3px solid #4CAF50 !important;
+            border: 4px solid #4CAF50 !important;
             background-color: #e8f5e9;
-            cursor: default;
+            opacity: 0.6;
         }
 
         .card-btn.wrong {
-            border: 3px solid #F44336 !important;
+            border: 4px solid #F44336 !important;
             background-color: #ffebee;
-        }
-
-        /* ปุ่มย้อนกลับมุมขวาล่าง */
-        .btn-back {
-            position: absolute;
-            bottom: -10px;
-            right: -10px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #4a332d;
-            color: white;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            z-index: 99;
-        }
-
-        .btn-back:focus {
-            outline: 4px solid #ff9800;
         }
 
         .sr-only {
@@ -186,13 +163,12 @@
 </head>
 <body>
 
-    <!-- สื่อสารกับ Screen Reader -->
-    <div id="sr-announcer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+    <div id="sr-announcer" class="sr-only" aria-live="assertive"></div>
 
     <!-- หน้า Splash Screen -->
     <div class="screen" id="splash-screen">
         <div class="circle-placeholder"></div>
-        <button class="btn-main" onclick="startGame()" aria-label="เริ่มต้นเกม จับคู่ภาพ">จับคู่ภาพ</button>
+        <div class="btn-main focused" id="splash-btn" data-label="เกมจับคู่ภาพ">เกมจับคู่ภาพ</div>
     </div>
 
     <!-- หน้า Match Screen -->
@@ -201,7 +177,6 @@
             <div class="images-column" id="images-container"></div>
             <div class="words-column" id="words-container"></div>
         </div>
-        <button class="btn-back" onclick="goBack()" aria-label="ย้อนกลับไปหน้าหลัก">↩</button>
     </div>
 
     <script>
@@ -218,25 +193,29 @@
             { id: 'roseapple', name: 'ชมพู่', img: 'pic/ชมพู่.jpg' }
         ];
 
+        let focusableElements = [];
+        let currentIndex = 0;
+
         let selectedImageId = null;
         let selectedWordId = null;
         let selectedImageBtn = null;
         let selectedWordBtn = null;
         let lockBoard = false;
+        let gameStarted = false;
+
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
 
         const announcer = document.getElementById('sr-announcer');
 
-        // ฟังก์ชันสั่งให้อ่านออกเสียง โดยต่อคิวการพูดตามลำดับ
-        function speak(text, clearQueue = false) {
+        function speak(text, clear = true) {
             if (announcer) {
                 announcer.textContent = text;
-                setTimeout(() => { announcer.textContent = ''; }, 3000);
             }
-
             if ('speechSynthesis' in window) {
-                if (clearQueue) {
-                    window.speechSynthesis.cancel(); // ล้างคิวกรณีเปลี่ยนหน้า/กดย้อนกลับเท่านั้น
-                }
+                if (clear) window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'th-TH';
                 utterance.rate = 1.0;
@@ -244,23 +223,11 @@
             }
         }
 
-        function startGame() {
-            document.getElementById('splash-screen').style.display = 'none';
-            document.getElementById('match-screen').style.display = 'block';
-            speak("เริ่มเกมจับคู่ภาพผลไม้", true);
-            renderGame();
+        // เริ่มต้นเซ็ตค่าหน้าแรกโดย "ไม่ส่งเสียงใดๆ" ตอนโหลดเว็บ
+        const splashBtn = document.getElementById('splash-btn');
 
-            setTimeout(() => {
-                const firstBtn = document.querySelector('.card-btn');
-                if (firstBtn) firstBtn.focus();
-            }, 100);
-        }
-
-        function goBack() {
-            document.getElementById('match-screen').style.display = 'none';
-            document.getElementById('splash-screen').style.display = 'flex';
-            speak("กลับสู่หน้าเริ่มต้น", true);
-            resetSelection();
+        function updateSplashFocus() {
+            speak(splashBtn.dataset.label);[cite: 1]
         }
 
         function renderGame() {
@@ -269,48 +236,116 @@
             
             imagesContainer.innerHTML = '';
             wordsContainer.innerHTML = '';
+            focusableElements = [];
 
             fruits.forEach(fruit => {
-                const imgBtn = document.createElement('button');
+                const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
-                imgBtn.setAttribute('aria-label', 'รูป ' + fruit.name);
-                imgBtn.innerHTML = `<img src="${fruit.img}" alt="รูป ${fruit.name}">`;
-                imgBtn.onclick = () => handleSelect('image', fruit.id, imgBtn);
+                imgBtn.dataset.type = 'image';
+                imgBtn.dataset.id = fruit.id;
+                imgBtn.dataset.name = fruit.name;
+                imgBtn.dataset.label = 'รูป ' + fruit.name;
+                imgBtn.innerHTML = `<img src="${fruit.img}" alt="${fruit.name}">`;
                 imagesContainer.appendChild(imgBtn);
+                focusableElements.push(imgBtn);
+            });
 
-                const wordBtn = document.createElement('button');
+            fruits.forEach(fruit => {
+                const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
-                wordBtn.setAttribute('aria-label', 'บัตรคำ ' + fruit.name);
+                wordBtn.dataset.type = 'word';
+                wordBtn.dataset.id = fruit.id;
+                wordBtn.dataset.name = fruit.name;
+                wordBtn.dataset.label = 'บัตรคำ ' + fruit.name;
                 wordBtn.innerText = fruit.name;
-                wordBtn.onclick = () => handleSelect('word', fruit.id, wordBtn);
                 wordsContainer.appendChild(wordBtn);
+                focusableElements.push(wordBtn);
+            });
+
+            currentIndex = 0;
+            updateFocus();
+        }
+
+        function updateFocus() {
+            focusableElements.forEach((el, index) => {
+                if (index === currentIndex) {
+                    el.classList.add('focused');
+                    let statusText = el.dataset.label;
+                    if (el.classList.contains('correct')) {
+                        statusText += ' จับคู่ถูกต้องแล้ว';
+                    } else if (el.classList.contains('selected')) {
+                        statusText += ' เลือกอยู่';
+                    }
+                    speak(statusText);[cite: 1]
+                } else {
+                    el.classList.remove('focused');
+                }
             });
         }
 
-        function handleSelect(type, id, btnElement) {
+        function nextItem() {
             if (lockBoard) return;
-            if (btnElement.classList.contains('correct')) return;
+            if (!gameStarted) return; // หน้าแรกมีปุ่มเดียว ไม่ต้องเลื่อน
+            if (currentIndex < focusableElements.length - 1) {
+                currentIndex++;
+            } else {
+                currentIndex = 0;
+            }
+            updateFocus();
+        }
 
-            const item = fruits.find(f => f.id === id);
+        function prevItem() {
+            if (lockBoard) return;
+            if (!gameStarted) return; // หน้าแรกมีปุ่มเดียว ไม่ต้องเลื่อน
+            if (currentIndex > 0) {
+                currentIndex--;
+            } else {
+                currentIndex = focusableElements.length - 1;
+            }
+            updateFocus();
+        }
+
+        function handleMainClick() {
+            if (!gameStarted) {
+                gameStarted = true;
+                document.getElementById('splash-screen').style.display = 'none';
+                document.getElementById('match-screen').style.display = 'block';
+                renderGame();
+            } else {
+                selectCurrentFocusedItem();[cite: 1]
+            }
+        }
+
+        function selectCurrentFocusedItem() {
+            if (lockBoard) return;
+            const currentEl = focusableElements[currentIndex];
+            if (!currentEl) return;
+
+            if (currentEl.classList.contains('correct')) {
+                speak(currentEl.dataset.label + ' จับคู่ถูกต้องไปแล้ว');[cite: 1]
+                return;
+            }
+
+            const type = currentEl.dataset.type;
+            const id = currentEl.dataset.id;
+            const name = currentEl.dataset.name;
 
             if (type === 'image') {
                 if (selectedImageBtn) selectedImageBtn.classList.remove('selected');
                 selectedImageId = id;
-                selectedImageBtn = btnElement;
+                selectedImageBtn = currentEl;
                 selectedImageBtn.classList.add('selected');
-                if (item) speak("เลือกรูป " + item.name, true);
+                speak("เลือกรูป " + name);[cite: 1]
             } else if (type === 'word') {
                 if (selectedWordBtn) selectedWordBtn.classList.remove('selected');
                 selectedWordId = id;
-                selectedWordBtn = btnElement;
+                selectedWordBtn = currentEl;
                 selectedWordBtn.classList.add('selected');
-                if (item) speak("เลือกบัตรคำ " + item.name, true);
+                speak("เลือกบัตรคำ " + name);[cite: 1]
             }
 
-            // ถ้าเลือกครบสองฝั่งแล้ว
             if (selectedImageId && selectedWordId) {
                 lockBoard = true;
-                // รอให้อ่าน "เลือกบัตรคำ [ชื่อผลไม้]" จบก่อนประมาณ 1.2 วินาที ค่อยเฉลยถูก/ผิด
                 setTimeout(() => {
                     checkMatch();
                 }, 1200);
@@ -321,19 +356,16 @@
             const isMatch = (selectedImageId === selectedWordId);
 
             if (isMatch) {
-                speak('จับคู่ถูกต้อง');
+                speak('จับคู่ถูกต้อง');[cite: 1]
                 selectedImageBtn.classList.remove('selected');
                 selectedWordBtn.classList.remove('selected');
 
                 selectedImageBtn.classList.add('correct');
                 selectedWordBtn.classList.add('correct');
 
-                selectedImageBtn.setAttribute('aria-label', selectedImageBtn.getAttribute('aria-label') + ' จับคู่ถูกต้องแล้ว');
-                selectedWordBtn.setAttribute('aria-label', selectedWordBtn.getAttribute('aria-label') + ' จับคู่ถูกต้องแล้ว');
-
                 resetSelection();
             } else {
-                speak('จับคู่ผิด ลองใหม่นะ');
+                speak('จับคู่ผิด ลองใหม่นะ');[cite: 1]
                 selectedImageBtn.classList.add('wrong');
                 selectedWordBtn.classList.add('wrong');
 
@@ -351,6 +383,38 @@
             selectedImageBtn = null;
             selectedWordBtn = null;
             lockBoard = false;
+        }
+
+        window.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        window.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleGesture();
+        }, { passive: true });
+
+        function handleGesture() {
+            const xDiff = touchEndX - touchStartX;
+            const yDiff = touchEndY - touchStartY;
+
+            if (Math.abs(xDiff) > 40 && Math.abs(xDiff) > Math.abs(yDiff)) {
+                if (!gameStarted) {
+                    // อยู่หน้าแรก ปัดแล้วให้อ่าน "เกมจับคู่ภาพ"
+                    updateSplashFocus();[cite: 1]
+                    return;
+                }
+                if (xDiff < 0) {
+                    nextItem();[cite: 1]
+                } else {
+                    prevItem();[cite: 1]
+                }
+            } 
+            else if (Math.abs(xDiff) < 15 && Math.abs(yDiff) < 15) {
+                handleMainClick();[cite: 1]
+            }
         }
     </script>
 </body>

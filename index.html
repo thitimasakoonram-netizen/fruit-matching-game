@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>เกมจับคู่ภาพผลไม้ (Accessible Screen Reader)</title>
     <style>
         * {
@@ -12,6 +12,7 @@
             font-family: 'Kanit', 'Tahoma', sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -22,7 +23,7 @@
             align-items: center;
             padding: 20px 0;
             overflow: hidden;
-            touch-action: none;
+            touch-action: none; /* ล็อกหน้าจอไม่ให้ไถขึ้นลง */
         }
 
         .screen {
@@ -40,6 +41,7 @@
             justify-content: center;
             align-items: center;
             gap: 40px;
+            display: flex;
         }
 
         .circle-placeholder {
@@ -47,6 +49,13 @@
             height: 100px;
             background-color: #fffde7;
             border-radius: 50%;
+            transition: transform 0.15s ease;
+        }
+
+        .circle-placeholder.focused {
+            outline: 6px solid #ff9800 !important;
+            outline-offset: 4px;
+            transform: scale(1.08);
         }
 
         .btn-main {
@@ -56,15 +65,13 @@
             padding: 16px 40px;
             border-radius: 12px;
             font-size: 20px;
-            cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: transform 0.15s ease;
         }
 
-        /* กรอบโฟกัสตอนปัดเจอหน้าแรก */
         .btn-main.focused {
             outline: 6px solid #ff9800 !important;
-            outline-offset: 2px;
+            outline-offset: 4px;
             transform: scale(1.05);
         }
 
@@ -167,8 +174,8 @@
 
     <!-- หน้า Splash Screen -->
     <div class="screen" id="splash-screen">
-        <div class="circle-placeholder"></div>
-        <div class="btn-main focused" id="splash-btn" data-label="เกมจับคู่ภาพ">เกมจับคู่ภาพ</div>
+        <div class="circle-placeholder focused" id="splash-logo" data-label="โลโก้"></div>
+        <div class="btn-main" id="splash-btn" data-label="เกมจับคู่ภาพ">เกมจับคู่ภาพ</div>
     </div>
 
     <!-- หน้า Match Screen -->
@@ -196,6 +203,9 @@
         let focusableElements = [];
         let currentIndex = 0;
 
+        let splashElements = [];
+        let splashIndex = 0;
+
         let selectedImageId = null;
         let selectedWordId = null;
         let selectedImageBtn = null;
@@ -203,14 +213,10 @@
         let lockBoard = false;
         let gameStarted = false;
 
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchEndX = 0;
-        let touchEndY = 0;
-
         const announcer = document.getElementById('sr-announcer');
 
         function speak(text, clear = true) {
+            if (!text) return;
             if (announcer) {
                 announcer.textContent = text;
             }
@@ -223,13 +229,29 @@
             }
         }
 
-        // เริ่มต้นเซ็ตค่าหน้าแรกโดย "ไม่ส่งเสียงใดๆ" ตอนโหลดเว็บ
+        // --- ระบบจัดการหน้าแรก (Splash Screen) ---
+        const splashLogo = document.getElementById('splash-logo');
         const splashBtn = document.getElementById('splash-btn');
+        splashElements = [splashLogo, splashBtn];
 
-        function updateSplashFocus() {
-            speak(splashBtn.dataset.label);[cite: 1]
+        function updateSplashFocus(speakText = true) {
+            splashElements.forEach((el, idx) => {
+                if (idx === splashIndex) {
+                    el.classList.add('focused');
+                    if (speakText) {
+                        if (el === splashLogo) {
+                            speak("โลโก้");
+                        } else {
+                            speak(el.dataset.label);
+                        }
+                    }
+                } else {
+                    el.classList.remove('focused');
+                }
+            });
         }
 
+        // --- ระบบเกม (Match Screen) ---
         function renderGame() {
             const imagesContainer = document.getElementById('images-container');
             const wordsContainer = document.getElementById('words-container');
@@ -276,7 +298,7 @@
                     } else if (el.classList.contains('selected')) {
                         statusText += ' เลือกอยู่';
                     }
-                    speak(statusText);[cite: 1]
+                    speak(statusText);
                 } else {
                     el.classList.remove('focused');
                 }
@@ -285,7 +307,16 @@
 
         function nextItem() {
             if (lockBoard) return;
-            if (!gameStarted) return; // หน้าแรกมีปุ่มเดียว ไม่ต้องเลื่อน
+            if (!gameStarted) {
+                if (splashIndex < splashElements.length - 1) {
+                    splashIndex++;
+                } else {
+                    splashIndex = 0;
+                }
+                updateSplashFocus(true);
+                return;
+            }
+
             if (currentIndex < focusableElements.length - 1) {
                 currentIndex++;
             } else {
@@ -296,7 +327,16 @@
 
         function prevItem() {
             if (lockBoard) return;
-            if (!gameStarted) return; // หน้าแรกมีปุ่มเดียว ไม่ต้องเลื่อน
+            if (!gameStarted) {
+                if (splashIndex > 0) {
+                    splashIndex--;
+                } else {
+                    splashIndex = splashElements.length - 1;
+                }
+                updateSplashFocus(true);
+                return;
+            }
+
             if (currentIndex > 0) {
                 currentIndex--;
             } else {
@@ -305,14 +345,19 @@
             updateFocus();
         }
 
-        function handleMainClick() {
+        function handleTapAction() {
             if (!gameStarted) {
-                gameStarted = true;
-                document.getElementById('splash-screen').style.display = 'none';
-                document.getElementById('match-screen').style.display = 'block';
-                renderGame();
+                // ถ้าโฟกัสอยู่ที่ปุ่มเริ่มเกม ถึงจะเข้าเกมได้
+                if (splashElements[splashIndex] === splashBtn) {
+                    gameStarted = true;
+                    document.getElementById('splash-screen').style.display = 'none';
+                    document.getElementById('match-screen').style.display = 'block';
+                    renderGame();
+                } else {
+                    speak("โลโก้");
+                }
             } else {
-                selectCurrentFocusedItem();[cite: 1]
+                selectCurrentFocusedItem();
             }
         }
 
@@ -322,7 +367,7 @@
             if (!currentEl) return;
 
             if (currentEl.classList.contains('correct')) {
-                speak(currentEl.dataset.label + ' จับคู่ถูกต้องไปแล้ว');[cite: 1]
+                speak(currentEl.dataset.label + ' จับคู่ถูกต้องไปแล้ว');
                 return;
             }
 
@@ -335,13 +380,13 @@
                 selectedImageId = id;
                 selectedImageBtn = currentEl;
                 selectedImageBtn.classList.add('selected');
-                speak("เลือกรูป " + name);[cite: 1]
+                speak("เลือกรูป " + name);
             } else if (type === 'word') {
                 if (selectedWordBtn) selectedWordBtn.classList.remove('selected');
                 selectedWordId = id;
                 selectedWordBtn = currentEl;
                 selectedWordBtn.classList.add('selected');
-                speak("เลือกบัตรคำ " + name);[cite: 1]
+                speak("เลือกบัตรคำ " + name);
             }
 
             if (selectedImageId && selectedWordId) {
@@ -356,7 +401,7 @@
             const isMatch = (selectedImageId === selectedWordId);
 
             if (isMatch) {
-                speak('จับคู่ถูกต้อง');[cite: 1]
+                speak('จับคู่ถูกต้อง');
                 selectedImageBtn.classList.remove('selected');
                 selectedWordBtn.classList.remove('selected');
 
@@ -365,7 +410,7 @@
 
                 resetSelection();
             } else {
-                speak('จับคู่ผิด ลองใหม่นะ');[cite: 1]
+                speak('จับคู่ผิด ลองใหม่นะ');
                 selectedImageBtn.classList.add('wrong');
                 selectedWordBtn.classList.add('wrong');
 
@@ -385,37 +430,53 @@
             lockBoard = false;
         }
 
+        // --- ระบบตรวจจับการปัดและการกดแบบแม่นยำ (Gesture Engine) ---
+        let startX = 0;
+        let startY = 0;
+        let isSwiping = false;
+
         window.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isSwiping = false;
+        }, { passive: false });
+
+        window.addEventListener('touchmove', e => {
+            if (!startX || !startY) return;
+
+            let diffX = e.touches[0].clientX - startX;
+            let diffY = e.touches[0].clientY - startY;
+
+            // ถ้าลากนิ้วมากกว่า 25px ถือว่ากำลังปัด ป้องกันไม่ให้ส่งอีเวนต์ Click
+            if (Math.abs(diffX) > 25 || Math.abs(diffY) > 25) {
+                isSwiping = true;
+            }
+        }, { passive: false });
 
         window.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            touchEndY = e.changedTouches[0].screenY;
-            handleGesture();
-        }, { passive: true });
+            let endX = e.changedTouches[0].clientX;
+            let endY = e.changedTouches[0].clientY;
 
-        function handleGesture() {
-            const xDiff = touchEndX - touchStartX;
-            const yDiff = touchEndY - touchStartY;
+            let diffX = endX - startX;
+            let diffY = endY - startY;
 
-            if (Math.abs(xDiff) > 40 && Math.abs(xDiff) > Math.abs(yDiff)) {
-                if (!gameStarted) {
-                    // อยู่หน้าแรก ปัดแล้วให้อ่าน "เกมจับคู่ภาพ"
-                    updateSplashFocus();[cite: 1]
-                    return;
-                }
-                if (xDiff < 0) {
-                    nextItem();[cite: 1]
+            // ตรวจจับปัดซ้าย-ขวา (แนวนอนต้องมากกว่าแนวตั้ง)
+            if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX < 0) {
+                    nextItem(); // ปัดซ้าย = ไปข้างหน้า
                 } else {
-                    prevItem();[cite: 1]
+                    prevItem(); // ปัดขวา = ถอยหลัง
                 }
             } 
-            else if (Math.abs(xDiff) < 15 && Math.abs(yDiff) < 15) {
-                handleMainClick();[cite: 1]
+            // ถ้านิ้วแทบไม่ขยับ (ไม่นับเป็น Swipe) ให้ถือว่าเป็นการ Tap กดเลือก
+            else if (!isSwiping && Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {
+                handleTapAction();
             }
-        }
+
+            startX = 0;
+            startY = 0;
+            isSwiping = false;
+        }, { passive: false });
     </script>
 </body>
 </html>

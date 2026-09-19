@@ -27,7 +27,8 @@
         }
 
         .screen {
-            width: fit-content;
+            width: 390px;
+            height: 700px;
             background-color: #cbe0ee;
             display: flex;
             flex-direction: column;
@@ -36,8 +37,6 @@
 
         /* หน้า Splash Screen */
         #splash-screen {
-            width: 390px;
-            height: 700px;
             justify-content: center;
             align-items: center;
             gap: 40px;
@@ -78,32 +77,35 @@
         /* หน้า Match Screen */
         #match-screen {
             display: none;
-            position: relative;
             padding: 10px;
-        }
-
-        .header-bar {
-            width: 100%;
-            display: flex;
+            align-items: center;
             justify-content: flex-start;
-            margin-bottom: 12px;
         }
 
+        /* ปุ่มย้อนกลับมุมขวาล่าง ตาม UI */
         .btn-back {
-            background-color: #fff;
-            color: #333;
-            font-size: 18px;
-            padding: 6px 12px;
-            border-radius: 8px;
-            width: fit-content;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 54px;
+            height: 54px;
+            background-color: #4a332d;
+            color: white;
+            font-size: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: all 0.15s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
         }
 
         .game-grid {
             display: flex;
             gap: 16px;
             align-items: start;
+            margin-top: 10px;
         }
 
         .images-column {
@@ -151,7 +153,7 @@
             pointer-events: none;
         }
 
-        .card-btn.focused {
+        .card-btn.focused, .btn-back.focused {
             outline: 6px solid #ff9800 !important;
             outline-offset: 2px;
             transform: scale(1.05);
@@ -198,14 +200,13 @@
 
     <!-- หน้า Match Screen -->
     <div class="screen" id="match-screen">
-        <div class="header-bar">
-            <div class="btn-back card-btn" id="btn-back-nav" data-type="back" data-label="ย้อนกลับ">⬅️</div>
-        </div>
-
         <div class="game-grid">
             <div class="images-column" id="images-container"></div>
             <div class="words-column" id="words-container"></div>
         </div>
+
+        <!-- ปุ่มย้อนกลับ วงกลมสีน้ำตาลด้านขวาล่างตาม UI -->
+        <div class="btn-back" id="btn-back-nav" data-type="back" data-label="ย้อนกลับ">↩</div>
     </div>
 
     <script>
@@ -279,7 +280,7 @@
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // 1. สร้างฝั่งรูปภาพและเก็บลง Array
+            // 1. สร้างฝั่งรูปภาพ
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
@@ -303,13 +304,13 @@
                 wordsContainer.appendChild(wordBtn);
             });
 
-            // จัดลำดับการโฟกัสตาม DOM (รูป 1-10 -> บัตรคำ 1-10 -> ปุ่มย้อนกลับ)
             const allImages = Array.from(imagesContainer.children);
             const allWords = Array.from(wordsContainer.children);
 
+            // เรียงลำดับปัด: รูปทั้งหมด 10 รูป -> บัตรคำ 10 คำ -> ปุ่มย้อนกลับมุมขวาล่าง
             focusableElements = [...allImages, ...allWords, btnBackNav];
 
-            currentIndex = 0; // เริ่มต้นที่รูปแตงโม
+            currentIndex = 0;
             updateFocus();
         }
 
@@ -359,7 +360,7 @@
                 if (splashElements[splashIndex] === splashBtn) {
                     gameStarted = true;
                     document.getElementById('splash-screen').style.display = 'none';
-                    document.getElementById('match-screen').style.display = 'block';
+                    document.getElementById('match-screen').style.display = 'flex';
                     renderGame();
                 }
             } else {
@@ -446,7 +447,7 @@
             lockBoard = false;
         }
 
-        // --- ระบบ Gesture ป้องกันเบราว์เซอร์แย่งจับการ Swipe ---
+        // --- ระบบ Gesture ---
         let startX = 0;
         let startY = 0;
         let isSwiping = false;
@@ -475,12 +476,11 @@
             let diffX = endX - startX;
             let diffY = endY - startY;
 
-            // ตรวจสอบการปัด: ปัดขวา (diffX > 30) = ถัดไป / ปัดซ้าย (diffX < -30) = ย้อนกลับ
             if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX > 0) {
-                    nextItem(); // ปัดนิ้วไปทางขวา = ไปวัตถุถัดไป
+                    nextItem(); // ปัดขวา = ถัดไป
                 } else {
-                    prevItem(); // ปัดนิ้วไปทางซ้าย = ถอยกลับ
+                    prevItem(); // ปัดซ้าย = ถอยกลับ
                 }
             } 
             else if (!isSwiping && Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {

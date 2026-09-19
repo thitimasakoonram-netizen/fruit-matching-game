@@ -201,26 +201,25 @@
     <!-- หน้า Match Screen -->
     <div class="screen" id="match-screen">
         <div class="game-grid">
-            <div class="images-container" id="images-container" class="images-column"></div>
-            <div class="words-container" id="words-container" class="words-column"></div>
+            <div id="images-container" class="images-column"></div>
+            <div id="words-container" class="words-column"></div>
         </div>
 
         <div class="btn-back" id="btn-back-nav" data-type="back" data-label="ย้อนกลับ">↩</div>
     </div>
 
     <script>
-        // ข้อมูลผลไม้ชุดใหม่ 10 ชนิด พร้อมคำบรรยายเสียงสำหรับรูปภาพ
         const fruits = [
-            { id: 'banana', name: 'กล้วย', desc: 'ผลยาว โค้ง เปลือกเรียบ เนื้อนุ่ม รสหวาน', img: 'pic/กล้วย.jpg' },
-            { id: 'lemon', name: 'เลม่อน', desc: 'ผลรี เปลือกขรุขระ เนื้อฉ่ำน้ำ รสเปรี้ยว', img: 'pic/เลม่อน.jpg' },
-            { id: 'orange', name: 'ส้ม', desc: 'ผลกลม เปลือกขรุขระ เนื้อเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/ส้ม.jpg' },
-            { id: 'apple', name: 'แอปเปิ้ล', desc: 'ผลกลม ผิวเรียบ เนื้อกรอบ รสหวานอมเปรี้ยว', img: 'pic/แอปเปิ้ล.jpg' },
-            { id: 'mangosteen', name: 'มังคุด', desc: 'ผลกลม เปลือกหนา เนื้อขาวนุ่มเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/มังคุด.jpg' },
-            { id: 'strawberry', name: 'สตรอว์เบอร์รี่', desc: 'ผลเล็ก รูปหัวใจ ผิวมีเมล็ดเล็ก ๆ เนื้อนุ่ม รสหวานอมเปรี้ยว', img: 'pic/สตรอว์เบอร์รี่.jpg' },
-            { id: 'custardapple', name: 'น้อยหน่า', desc: 'ผลกลม ผิวเป็นปุ่ม เนื้อนุ่ม มีเมล็ดแข็ง รสหวาน', img: 'pic/น้อยหน่า.jpg' },
-            { id: 'mango', name: 'มะม่วง', desc: 'ผลรีและยาว ผิวเรียบ เนื้อแน่นหรือเนื้อนุ่ม รสหวานหรือเปรี้ยว', img: 'pic/มะม่วง.jpg' },
-            { id: 'kiwi', name: 'กีวี', desc: 'ผลรี เปลือกสากมีขนอ่อน เนื้อนุ่ม มีเมล็ดเล็ก ๆ รสหวานอมเปรี้ยว', img: 'pic/กีวี.jpg' },
-            { id: 'papaya', name: 'มะละกอ', desc: 'ผลยาวรี ผิวเรียบ เนื้อนุ่มฉ่ำน้ำ มีเมล็ดกลม รสหวาน', img: 'pic/มะละกอ.jpg' }
+            { id: 'banana', name: 'กล้วย', desc: 'ผลยาว โค้ง เปลือกเรียบ เนื้อนุ่ม รสหวาน', img: 'กล้วย.jpg' },
+            { id: 'lemon', name: 'เลม่อน', desc: 'ผลรี เปลือกขรุขระ เนื้อฉ่ำน้ำ รสเปรี้ยว', img: 'เลม่อน.jpg' },
+            { id: 'orange', name: 'ส้ม', desc: 'ผลกลม เปลือกขรุขระ เนื้อเป็นกลีบ รสหวานอมเปรี้ยว', img: 'ส้ม.jpg' },
+            { id: 'apple', name: 'แอปเปิ้ล', desc: 'ผลกลม ผิวเรียบ เนื้อกรอบ รสหวานอมเปรี้ยว', img: 'แอปเปิ้ล.jpg' },
+            { id: 'mangosteen', name: 'มังคุด', desc: 'ผลกลม เปลือกหนา เนื้อขาวนุ่มเป็นกลีบ รสหวานอมเปรี้ยว', img: 'มังคุด.jpg' },
+            { id: 'strawberry', name: 'สตรอว์เบอร์รี่', desc: 'ผลเล็ก รูปหัวใจ ผิวมีเมล็ดเล็ก ๆ เนื้อนุ่ม รสหวานอมเปรี้ยว', img: 'สตรอว์เบอร์รี่.jpg' },
+            { id: 'custardapple', name: 'น้อยหน่า', desc: 'ผลกลม ผิวเป็นปุ่ม เนื้อนุ่ม มีเมล็ดแข็ง รสหวาน', img: 'น้อยหน่า.jpg' },
+            { id: 'mango', name: 'มะม่วง', desc: 'ผลรีและยาว ผิวเรียบ เนื้อแน่นหรือเนื้อนุ่ม รสหวานหรือเปรี้ยว', img: 'มะม่วง.jpg' },
+            { id: 'kiwi', name: 'กีวี', desc: 'ผลรี เปลือกสากมีขนอ่อน เนื้อนุ่ม มีเมล็ดเล็ก ๆ รสหวานอมเปรี้ยว', img: 'กีวี.jpg' },
+            { id: 'papaya', name: 'มะละกอ', desc: 'ผลยาวรี ผิวเรียบ เนื้อนุ่มฉ่ำน้ำ มีเมล็ดกลม รสหวาน', img: 'มะละกอ.jpg' }
         ];
 
         let focusableElements = [];
@@ -276,33 +275,32 @@
             const wordsContainer = document.getElementById('words-container');
             const btnBackNav = document.getElementById('btn-back-nav');
             
-            imagesContainer.className = 'images-column';
-            wordsContainer.className = 'words-column';
-            
             imagesContainer.innerHTML = '';
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // 1. สร้างฝั่งรูปภาพ (อ่านคำบรรยายลักษณะผลไม้)
+            // 1. สร้างฝั่งรูปภาพ (แปลงชื่อไฟล์ภาษาไทยให้เป็น URL-encoded ป้องกันรูปไม่ขึ้น)
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
                 imgBtn.dataset.type = 'image';
                 imgBtn.dataset.id = fruit.id;
                 imgBtn.dataset.name = fruit.name;
-                imgBtn.dataset.label = 'รูปภาพ ' + fruit.desc; // ใช้คำบรรยายภาพตามตาราง
-                imgBtn.innerHTML = `<img src="${fruit.img}" alt="${fruit.name}">`;
+                imgBtn.dataset.label = 'รูปภาพ ' + fruit.desc;
+                
+                const encodedImgPath = 'pic/' + encodeURIComponent(fruit.img);
+                imgBtn.innerHTML = `<img src="${encodedImgPath}" alt="${fruit.name}">`;
                 imagesContainer.appendChild(imgBtn);
             });
 
-            // 2. สร้างฝั่งบัตรคำ (อ่านแค่ชื่อผลไม้)
+            // 2. สร้างฝั่งบัตรคำ
             fruits.forEach(fruit => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
                 wordBtn.dataset.type = 'word';
                 wordBtn.dataset.id = fruit.id;
                 wordBtn.dataset.name = fruit.name;
-                wordBtn.dataset.label = 'บัตรคำ ' + fruit.name; // อ่านแค่ชื่อผลไม้
+                wordBtn.dataset.label = 'บัตรคำ ' + fruit.name;
                 wordBtn.innerText = fruit.name;
                 wordsContainer.appendChild(wordBtn);
             });
@@ -310,7 +308,6 @@
             const allImages = Array.from(imagesContainer.children);
             const allWords = Array.from(wordsContainer.children);
 
-            // เรียงลำดับปัด: รูปทั้งหมด 10 รูป -> บัตรคำ 10 คำ -> ปุ่มย้อนกลับ
             focusableElements = [...allImages, ...allWords, btnBackNav];
 
             currentIndex = 0;

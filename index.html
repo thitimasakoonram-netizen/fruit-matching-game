@@ -82,7 +82,6 @@
             justify-content: flex-start;
         }
 
-        /* ปุ่มย้อนกลับมุมขวาล่าง */
         .btn-back {
             position: absolute;
             bottom: 20px;
@@ -192,13 +191,11 @@
 
     <div id="sr-announcer" class="sr-only" aria-live="assertive"></div>
 
-    <!-- หน้า Splash Screen -->
     <div class="screen" id="splash-screen">
         <div class="circle-placeholder focused" id="splash-logo"></div>
         <div class="btn-main" id="splash-btn" data-label="เกมจับคู่ภาพ">เกมจับคู่ภาพ</div>
     </div>
 
-    <!-- หน้า Match Screen -->
     <div class="screen" id="match-screen">
         <div class="game-grid">
             <div id="images-container" class="images-column"></div>
@@ -210,24 +207,22 @@
 
     <script>
         const fruits = [
-            { id: 'banana', name: 'กล้วย', desc: 'ผลยาว โค้ง เปลือกเรียบ เนื้อนุ่ม รสหวาน', img: 'pic/banana.jpg' },
-            { id: 'lemon', name: 'เลม่อน', desc: 'ผลรี เปลือกขรุขระ เนื้อฉ่ำน้ำ รสเปรี้ยว', img: 'pic/lemon.jpg' },
-            { id: 'orange', name: 'ส้ม', desc: 'ผลกลม เปลือกขรุขระ เนื้อเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/orange.jpg' },
             { id: 'apple', name: 'แอปเปิ้ล', desc: 'ผลกลม ผิวเรียบ เนื้อกรอบ รสหวานอมเปรี้ยว', img: 'pic/apple.jpg' },
-            { id: 'mangosteen', name: 'มังคุด', desc: 'ผลกลม เปลือกหนา เนื้อขาวนุ่มเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/mangosteen.jpg' },
-            { id: 'strawberry', name: 'สตรอว์เบอร์รี่', desc: 'ผลเล็ก รูปหัวใจ ผิวมีเมล็ดเล็ก ๆ เนื้อนุ่ม รสหวานอมเปรี้ยว', img: 'pic/strawberry.jpg' },
+            { id: 'banana', name: 'กล้วย', desc: 'ผลยาว โค้ง เปลือกเรียบ เนื้อนุ่ม รสหวาน', img: 'pic/banana.jpg' },
             { id: 'custardapple', name: 'น้อยหน่า', desc: 'ผลกลม ผิวเป็นปุ่ม เนื้อนุ่ม มีเมล็ดแข็ง รสหวาน', img: 'pic/custardapple.jpg' },
-            { id: 'mango', name: 'มะม่วง', desc: 'ผลรีและยาว ผิวเรียบ เนื้อแน่นหรือเนื้อนุ่ม รสหวานหรือเปรี้ยว', img: 'pic/mango.jpg' },
             { id: 'kiwi', name: 'กีวี', desc: 'ผลรี เปลือกสากมีขนอ่อน เนื้อนุ่ม มีเมล็ดเล็ก ๆ รสหวานอมเปรี้ยว', img: 'pic/kiwi.jpg' },
-            { id: 'papaya', name: 'มะละกอ', desc: 'ผลยาวรี ผิวเรียบ เนื้อนุ่มฉ่ำน้ำ มีเมล็ดกลม รสหวาน', img: 'pic/papaya.jpg' }
+            { id: 'lemon', name: 'เลม่อน', desc: 'ผลรี เปลือกขรุขระ เนื้อฉ่ำน้ำ รสเปรี้ยว', img: 'pic/lemon.jpg' },
+            { id: 'mango', name: 'มะม่วง', desc: 'ผลรีและยาว ผิวเรียบ เนื้อแน่นหรือเนื้อนุ่ม รสหวานหรือเปรี้ยว', img: 'pic/mango.jpg' },
+            { id: 'mangosteen', name: 'มังคุด', desc: 'ผลกลม เปลือกหนา เนื้อขาวนุ่มเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/mangosteen.jpg' },
+            { id: 'orange', name: 'ส้ม', desc: 'ผลกลม เปลือกขรุขระ เนื้อเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/orange.jpg' },
+            { id: 'papaya', name: 'มะละกอ', desc: 'ผลยาวรี ผิวเรียบ เนื้อนุ่มฉ่ำน้ำ มีเมล็ดกลม รสหวาน', img: 'pic/papaya.jpg' },
+            { id: 'strawberry', name: 'สตรอว์เบอร์รี่', desc: 'ผลเล็ก รูปหัวใจ ผิวมีเมล็ดเล็ก ๆ เนื้อนุ่ม รสหวานอมเปรี้ยว', img: 'pic/strawberry.jpg' }
         ];
 
         let focusableElements = [];
         let currentIndex = 0;
-
         let splashElements = [];
         let splashIndex = 0;
-
         let selectedImageId = null;
         let selectedWordId = null;
         let selectedImageBtn = null;
@@ -251,7 +246,6 @@
             }
         }
 
-        // --- หน้าแรก ---
         const splashLogo = document.getElementById('splash-logo');
         const splashBtn = document.getElementById('splash-btn');
         splashElements = [splashLogo, splashBtn];
@@ -269,7 +263,6 @@
             });
         }
 
-        // --- หน้าเกม ---
         function renderGame() {
             const imagesContainer = document.getElementById('images-container');
             const wordsContainer = document.getElementById('words-container');
@@ -279,7 +272,6 @@
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // 1. สร้างฝั่งรูปภาพ
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
@@ -292,7 +284,6 @@
                 imagesContainer.appendChild(imgBtn);
             });
 
-            // 2. สร้างฝั่งบัตรคำ
             fruits.forEach(fruit => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
@@ -446,7 +437,6 @@
             lockBoard = false;
         }
 
-        // --- ระบบ Gesture ---
         let startX = 0;
         let startY = 0;
         let isSwiping = false;
@@ -477,9 +467,9 @@
 
             if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX > 0) {
-                    nextItem(); // ปัดขวา = ถัดไป
+                    nextItem();
                 } else {
-                    prevItem(); // ปัดซ้าย = ย้อนกลับ
+                    prevItem();
                 }
             } 
             else if (!isSwiping && Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {

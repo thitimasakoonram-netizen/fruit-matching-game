@@ -23,7 +23,7 @@
             align-items: center;
             padding: 20px 0;
             overflow: hidden;
-            touch-action: none; /* ล็อกหน้าจอไม่ให้ไถขึ้นลง */
+            touch-action: none;
         }
 
         .screen {
@@ -80,6 +80,25 @@
             display: none;
             position: relative;
             padding: 10px;
+        }
+
+        /* ปุ่มย้อนกลับ */
+        .btn-back {
+            background-color: #ff5722;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            width: fit-content;
+            transition: all 0.15s ease;
+        }
+
+        .btn-back.focused {
+            outline: 6px solid #ff9800 !important;
+            outline-offset: 2px;
+            transform: scale(1.05);
         }
 
         .game-grid {
@@ -174,12 +193,15 @@
 
     <!-- หน้า Splash Screen -->
     <div class="screen" id="splash-screen">
-        <div class="circle-placeholder focused" id="splash-logo" data-label="โลโก้"></div>
+        <div class="circle-placeholder focused" id="splash-logo"></div>
         <div class="btn-main" id="splash-btn" data-label="เกมจับคู่ภาพ">เกมจับคู่ภาพ</div>
     </div>
 
     <!-- หน้า Match Screen -->
     <div class="screen" id="match-screen">
+        <!-- ปุ่มย้อนกลับ -->
+        <div class="btn-back card-btn" id="btn-back-nav" data-type="back" data-label="ย้อนกลับ">⬅️ ย้อนกลับ</div>
+
         <div class="game-grid">
             <div class="images-column" id="images-container"></div>
             <div class="words-column" id="words-container"></div>
@@ -234,16 +256,13 @@
         const splashBtn = document.getElementById('splash-btn');
         splashElements = [splashLogo, splashBtn];
 
-        function updateSplashFocus(speakText = true) {
+        function updateSplashFocus() {
             splashElements.forEach((el, idx) => {
                 if (idx === splashIndex) {
                     el.classList.add('focused');
-                    if (speakText) {
-                        if (el === splashLogo) {
-                            speak("โลโก้");
-                        } else {
-                            speak(el.dataset.label);
-                        }
+                    // ปัดมาโดนโลโก้จะไม่ส่งเสียงพูดใดๆ อ่านเฉพาะปุ่มเกมจับคู่ภาพ
+                    if (el === splashBtn) {
+                        speak(el.dataset.label);
                     }
                 } else {
                     el.classList.remove('focused');
@@ -255,11 +274,16 @@
         function renderGame() {
             const imagesContainer = document.getElementById('images-container');
             const wordsContainer = document.getElementById('words-container');
+            const btnBackNav = document.getElementById('btn-back-nav');
             
             imagesContainer.innerHTML = '';
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
+            // 1. ใส่ปุ่มย้อนกลับเป็นอันดับแรกสุดของการโฟกัส
+            focusableElements.push(btnBackNav);
+
+            // 2. ใส่รูปภาพทั้ง 10 รูป
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
@@ -272,6 +296,7 @@
                 focusableElements.push(imgBtn);
             });
 
+            // 3. ใส่บัตรคำทั้ง 10 คำ
             fruits.forEach(fruit => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
@@ -284,7 +309,7 @@
                 focusableElements.push(wordBtn);
             });
 
-            currentIndex = 0;
+            currentIndex = 1; // เริ่มโฟกัสที่รูปแรกทันทีเมื่อเข้าเกม
             updateFocus();
         }
 
@@ -313,14 +338,14 @@
                 } else {
                     splashIndex = 0;
                 }
-                updateSplashFocus(true);
+                updateSplashFocus();
                 return;
             }
 
             if (currentIndex < focusableElements.length - 1) {
                 currentIndex++;
             } else {
-                currentIndex = 0;
+                currentIndex = 0; // วนกลับไปปุ่มย้อนกลับ
             }
             updateFocus();
         }
@@ -333,14 +358,14 @@
                 } else {
                     splashIndex = splashElements.length - 1;
                 }
-                updateSplashFocus(true);
+                updateSplashFocus();
                 return;
             }
 
             if (currentIndex > 0) {
                 currentIndex--;
             } else {
-                currentIndex = focusableElements.length - 1;
+                currentIndex = focusableElements.length - 1; // วนไปอันสุดท้าย
             }
             updateFocus();
         }
@@ -353,8 +378,6 @@
                     document.getElementById('splash-screen').style.display = 'none';
                     document.getElementById('match-screen').style.display = 'block';
                     renderGame();
-                } else {
-                    speak("โลโก้");
                 }
             } else {
                 selectCurrentFocusedItem();
@@ -365,6 +388,17 @@
             if (lockBoard) return;
             const currentEl = focusableElements[currentIndex];
             if (!currentEl) return;
+
+            // กดปุ่มย้อนกลับเพื่อออกไปหน้าแรก
+            if (currentEl.dataset.type === 'back') {
+                gameStarted = false;
+                splashIndex = 0; // รีเซ็ตโฟกัสกลับไปที่โลโก้
+                document.getElementById('match-screen').style.display = 'none';
+                document.getElementById('splash-screen').style.display = 'flex';
+                updateSplashFocus();
+                resetSelection();
+                return;
+            }
 
             if (currentEl.classList.contains('correct')) {
                 speak(currentEl.dataset.label + ' จับคู่ถูกต้องไปแล้ว');
@@ -430,7 +464,7 @@
             lockBoard = false;
         }
 
-        // --- ระบบตรวจจับการปัดและการกดแบบแม่นยำ (Gesture Engine) ---
+        // --- ระบบ Gesture ตรวจจับการปัดและการกด ---
         let startX = 0;
         let startY = 0;
         let isSwiping = false;
@@ -447,8 +481,7 @@
             let diffX = e.touches[0].clientX - startX;
             let diffY = e.touches[0].clientY - startY;
 
-            // ถ้าลากนิ้วมากกว่า 25px ถือว่ากำลังปัด ป้องกันไม่ให้ส่งอีเวนต์ Click
-            if (Math.abs(diffX) > 25 || Math.abs(diffY) > 25) {
+            if (Math.abs(diffX) > 20 || Math.abs(diffY) > 20) {
                 isSwiping = true;
             }
         }, { passive: false });
@@ -460,15 +493,14 @@
             let diffX = endX - startX;
             let diffY = endY - startY;
 
-            // ตรวจจับปัดซ้าย-ขวา (แนวนอนต้องมากกว่าแนวตั้ง)
+            // ปัดซ้าย (Swipe Left) = ถัดไป / ปัดขวา (Swipe Right) = ย้อนกลับ
             if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX < 0) {
-                    nextItem(); // ปัดซ้าย = ไปข้างหน้า
+                    nextItem(); 
                 } else {
-                    prevItem(); // ปัดขวา = ถอยหลัง
+                    prevItem(); 
                 }
             } 
-            // ถ้านิ้วแทบไม่ขยับ (ไม่นับเป็น Swipe) ให้ถือว่าเป็นการ Tap กดเลือก
             else if (!isSwiping && Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {
                 handleTapAction();
             }

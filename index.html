@@ -82,7 +82,6 @@
             padding: 10px;
         }
 
-        /* ปุ่มย้อนกลับตาม UI จัดวางด้านบนซ้าย */
         .header-bar {
             width: 100%;
             display: flex;
@@ -91,20 +90,14 @@
         }
 
         .btn-back {
-            background-color: #ff5722;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            padding: 8px 16px;
+            background-color: #fff;
+            color: #333;
+            font-size: 18px;
+            padding: 6px 12px;
             border-radius: 8px;
             width: fit-content;
             transition: all 0.15s ease;
-        }
-
-        .btn-back.focused {
-            outline: 6px solid #ff9800 !important;
-            outline-offset: 2px;
-            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .game-grid {
@@ -205,9 +198,8 @@
 
     <!-- หน้า Match Screen -->
     <div class="screen" id="match-screen">
-        <!-- แถบด้านบนสำหรับปุ่มย้อนกลับ -->
         <div class="header-bar">
-            <div class="btn-back card-btn" id="btn-back-nav" data-type="back" data-label="ย้อนกลับ">⬅️ ย้อนกลับ</div>
+            <div class="btn-back card-btn" id="btn-back-nav" data-type="back" data-label="ย้อนกลับ">⬅️</div>
         </div>
 
         <div class="game-grid">
@@ -259,7 +251,7 @@
             }
         }
 
-        // --- ระบบจัดการหน้าแรก (Splash Screen) ---
+        // --- หน้าแรก ---
         const splashLogo = document.getElementById('splash-logo');
         const splashBtn = document.getElementById('splash-btn');
         splashElements = [splashLogo, splashBtn];
@@ -277,7 +269,7 @@
             });
         }
 
-        // --- ระบบเกม (Match Screen) ---
+        // --- หน้าเกม ---
         function renderGame() {
             const imagesContainer = document.getElementById('images-container');
             const wordsContainer = document.getElementById('words-container');
@@ -287,7 +279,7 @@
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // 1. ใส่รูปภาพทั้ง 10 รูปก่อน (เริ่มอ่านที่รูปแรก)
+            // 1. สร้างฝั่งรูปภาพและเก็บลง Array
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
@@ -297,10 +289,9 @@
                 imgBtn.dataset.label = 'รูป ' + fruit.name;
                 imgBtn.innerHTML = `<img src="${fruit.img}" alt="${fruit.name}">`;
                 imagesContainer.appendChild(imgBtn);
-                focusableElements.push(imgBtn);
             });
 
-            // 2. ใส่บัตรคำทั้ง 10 คำ
+            // 2. สร้างฝั่งบัตรคำ
             fruits.forEach(fruit => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
@@ -310,13 +301,15 @@
                 wordBtn.dataset.label = 'บัตรคำ ' + fruit.name;
                 wordBtn.innerText = fruit.name;
                 wordsContainer.appendChild(wordBtn);
-                focusableElements.push(wordBtn);
             });
 
-            // 3. ใส่ปุ่มย้อนกลับไว้ท้ายสุดของลำดับการปัด (แต่ UI อยู่ซ้ายบน)
-            focusableElements.push(btnBackNav);
+            // จัดลำดับการโฟกัสตาม DOM (รูป 1-10 -> บัตรคำ 1-10 -> ปุ่มย้อนกลับ)
+            const allImages = Array.from(imagesContainer.children);
+            const allWords = Array.from(wordsContainer.children);
 
-            currentIndex = 0; // เริ่มต้นที่ รูปที่ 1
+            focusableElements = [...allImages, ...allWords, btnBackNav];
+
+            currentIndex = 0; // เริ่มต้นที่รูปแตงโม
             updateFocus();
         }
 
@@ -340,40 +333,24 @@
         function nextItem() {
             if (lockBoard) return;
             if (!gameStarted) {
-                if (splashIndex < splashElements.length - 1) {
-                    splashIndex++;
-                } else {
-                    splashIndex = 0;
-                }
+                splashIndex = (splashIndex + 1) % splashElements.length;
                 updateSplashFocus();
                 return;
             }
 
-            if (currentIndex < focusableElements.length - 1) {
-                currentIndex++;
-            } else {
-                currentIndex = 0; // ปัดขวาจนสุดจะวนกลับไปรูปแรก
-            }
+            currentIndex = (currentIndex + 1) % focusableElements.length;
             updateFocus();
         }
 
         function prevItem() {
             if (lockBoard) return;
             if (!gameStarted) {
-                if (splashIndex > 0) {
-                    splashIndex--;
-                } else {
-                    splashIndex = splashElements.length - 1;
-                }
+                splashIndex = (splashIndex - 1 + splashElements.length) % splashElements.length;
                 updateSplashFocus();
                 return;
             }
 
-            if (currentIndex > 0) {
-                currentIndex--;
-            } else {
-                currentIndex = focusableElements.length - 1; // ปัดซ้ายวนไปอันสุดท้าย
-            }
+            currentIndex = (currentIndex - 1 + focusableElements.length) % focusableElements.length;
             updateFocus();
         }
 
@@ -395,10 +372,9 @@
             const currentEl = focusableElements[currentIndex];
             if (!currentEl) return;
 
-            // พอกดเลือกปุ่มย้อนกลับ
             if (currentEl.dataset.type === 'back') {
                 gameStarted = false;
-                splashIndex = 0; // รีเซ็ตไปที่โลโก้
+                splashIndex = 0;
                 document.getElementById('match-screen').style.display = 'none';
                 document.getElementById('splash-screen').style.display = 'flex';
                 updateSplashFocus();
@@ -470,7 +446,7 @@
             lockBoard = false;
         }
 
-        // --- ระบบ Gesture ตรวจจับการปัดและการกด ---
+        // --- ระบบ Gesture ป้องกันเบราว์เซอร์แย่งจับการ Swipe ---
         let startX = 0;
         let startY = 0;
         let isSwiping = false;
@@ -479,7 +455,7 @@
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
             isSwiping = false;
-        }, { passive: false });
+        }, { passive: true });
 
         window.addEventListener('touchmove', e => {
             if (!startX || !startY) return;
@@ -487,10 +463,10 @@
             let diffX = e.touches[0].clientX - startX;
             let diffY = e.touches[0].clientY - startY;
 
-            if (Math.abs(diffX) > 20 || Math.abs(diffY) > 20) {
+            if (Math.abs(diffX) > 15 || Math.abs(diffY) > 15) {
                 isSwiping = true;
             }
-        }, { passive: false });
+        }, { passive: true });
 
         window.addEventListener('touchend', e => {
             let endX = e.changedTouches[0].clientX;
@@ -499,12 +475,12 @@
             let diffX = endX - startX;
             let diffY = endY - startY;
 
-            // แก้ไขทิศทาง: ปัดขวา (diffX > 0) = ถัดไป / ปัดซ้าย (diffX < 0) = ย้อนกลับ
+            // ตรวจสอบการปัด: ปัดขวา (diffX > 30) = ถัดไป / ปัดซ้าย (diffX < -30) = ย้อนกลับ
             if (Math.abs(diffX) > 30 && Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX > 0) {
-                    nextItem();  // ปัดขวา = ถัดไป
+                    nextItem(); // ปัดนิ้วไปทางขวา = ไปวัตถุถัดไป
                 } else {
-                    prevItem();  // ปัดซ้าย = ย้อนกลับ
+                    prevItem(); // ปัดนิ้วไปทางซ้าย = ถอยกลับ
                 }
             } 
             else if (!isSwiping && Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {
@@ -514,7 +490,7 @@
             startX = 0;
             startY = 0;
             isSwiping = false;
-        }, { passive: false });
+        }, { passive: true });
     </script>
 </body>
 </html>

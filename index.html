@@ -210,7 +210,7 @@
 
     <script>
         const fruits = [
-            { id: 'banana', name: 'กล้วย', desc: 'ผลยาว โค้ง เปลือกเรียบ เนื้อนุ่ม รสหวาน', img: 'pic/กล้วย.jpg' },
+            { id: 'banana', name: 'กล้วย', desc: 'ผลยาว โค้ง เปลือกเรียบ เนื้อนุ่ม รสหวาน', img: 'กล้วย.jpg' },
             { id: 'lemon', name: 'เลม่อน', desc: 'ผลรี เปลือกขรุขระ เนื้อฉ่ำน้ำ รสเปรี้ยว', img: 'เลม่อน.jpg' },
             { id: 'orange', name: 'ส้ม', desc: 'ผลกลม เปลือกขรุขระ เนื้อเป็นกลีบ รสหวานอมเปรี้ยว', img: 'ส้ม.jpg' },
             { id: 'apple', name: 'แอปเปิ้ล', desc: 'ผลกลม ผิวเรียบ เนื้อกรอบ รสหวานอมเปรี้ยว', img: 'แอปเปิ้ล.jpg' },
@@ -279,7 +279,7 @@
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // 1. สร้างฝั่งรูปภาพ (แปลงชื่อไฟล์ภาษาไทยให้เป็น URL-encoded ป้องกันรูปไม่ขึ้น)
+            // 1. สร้างฝั่งรูปภาพ
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
@@ -288,8 +288,9 @@
                 imgBtn.dataset.name = fruit.name;
                 imgBtn.dataset.label = 'รูปภาพ ' + fruit.desc;
                 
-                const encodedImgPath = 'pic/' + encodeURIComponent(fruit.img);
-                imgBtn.innerHTML = `<img src="${encodedImgPath}" alt="${fruit.name}">`;
+                // รวมโฟลเดอร์ pic/ และเข้ารหัสชื่อไฟล์ภาษาไทยป้องกันพาธเสีย
+                const fullImgPath = 'pic/' + encodeURIComponent(fruit.img);
+                imgBtn.innerHTML = `<img src="${fullImgPath}" alt="${fruit.name}">`;
                 imagesContainer.appendChild(imgBtn);
             });
 

@@ -82,7 +82,7 @@
             justify-content: flex-start;
         }
 
-        /* ปุ่มย้อนกลับมุมขวาล่าง ตาม UI */
+        /* ปุ่มย้อนกลับมุมขวาล่าง */
         .btn-back {
             position: absolute;
             bottom: 20px;
@@ -201,26 +201,26 @@
     <!-- หน้า Match Screen -->
     <div class="screen" id="match-screen">
         <div class="game-grid">
-            <div class="images-column" id="images-container"></div>
-            <div class="words-column" id="words-container"></div>
+            <div class="images-container" id="images-container" class="images-column"></div>
+            <div class="words-container" id="words-container" class="words-column"></div>
         </div>
 
-        <!-- ปุ่มย้อนกลับ วงกลมสีน้ำตาลด้านขวาล่างตาม UI -->
         <div class="btn-back" id="btn-back-nav" data-type="back" data-label="ย้อนกลับ">↩</div>
     </div>
 
     <script>
+        // ข้อมูลผลไม้ชุดใหม่ 10 ชนิด พร้อมคำบรรยายเสียงสำหรับรูปภาพ
         const fruits = [
-            { id: 'watermelon', name: 'แตงโม', img: 'pic/แตงโม.jpg' },
-            { id: 'passionfruit', name: 'เสาวรส', img: 'pic/เสาวรส.jpg' },
-            { id: 'blueberry', name: 'บลูเบอร์รี่', img: 'pic/บลูเบอร์รี่.jpg' },
-            { id: 'strawberry', name: 'สตรอว์เบอร์รี่', img: 'pic/สตรอว์เบอร์รี่.jpg' },
-            { id: 'longan', name: 'ลำไย', img: 'pic/ลำไย.jpg' },
-            { id: 'mangosteen', name: 'มังคุด', img: 'pic/มังคุด.jpg' },
-            { id: 'kiwi', name: 'กีวี่', img: 'pic/กีวี่.jpg' },
-            { id: 'lychee', name: 'ลิ้นจี่', img: 'pic/ลิ้นจี่.jpg' },
-            { id: 'dragonfruit', name: 'แก้วมังกร', img: 'pic/แก้วมังกร.jpg' },
-            { id: 'roseapple', name: 'ชมพู่', img: 'pic/ชมพู่.jpg' }
+            { id: 'banana', name: 'กล้วย', desc: 'ผลยาว โค้ง เปลือกเรียบ เนื้อนุ่ม รสหวาน', img: 'pic/กล้วย.jpg' },
+            { id: 'lemon', name: 'เลม่อน', desc: 'ผลรี เปลือกขรุขระ เนื้อฉ่ำน้ำ รสเปรี้ยว', img: 'pic/เลม่อน.jpg' },
+            { id: 'orange', name: 'ส้ม', desc: 'ผลกลม เปลือกขรุขระ เนื้อเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/ส้ม.jpg' },
+            { id: 'apple', name: 'แอปเปิ้ล', desc: 'ผลกลม ผิวเรียบ เนื้อกรอบ รสหวานอมเปรี้ยว', img: 'pic/แอปเปิ้ล.jpg' },
+            { id: 'mangosteen', name: 'มังคุด', desc: 'ผลกลม เปลือกหนา เนื้อขาวนุ่มเป็นกลีบ รสหวานอมเปรี้ยว', img: 'pic/มังคุด.jpg' },
+            { id: 'strawberry', name: 'สตรอว์เบอร์รี่', desc: 'ผลเล็ก รูปหัวใจ ผิวมีเมล็ดเล็ก ๆ เนื้อนุ่ม รสหวานอมเปรี้ยว', img: 'pic/สตรอว์เบอร์รี่.jpg' },
+            { id: 'custardapple', name: 'น้อยหน่า', desc: 'ผลกลม ผิวเป็นปุ่ม เนื้อนุ่ม มีเมล็ดแข็ง รสหวาน', img: 'pic/น้อยหน่า.jpg' },
+            { id: 'mango', name: 'มะม่วง', desc: 'ผลรีและยาว ผิวเรียบ เนื้อแน่นหรือเนื้อนุ่ม รสหวานหรือเปรี้ยว', img: 'pic/มะม่วง.jpg' },
+            { id: 'kiwi', name: 'กีวี', desc: 'ผลรี เปลือกสากมีขนอ่อน เนื้อนุ่ม มีเมล็ดเล็ก ๆ รสหวานอมเปรี้ยว', img: 'pic/กีวี.jpg' },
+            { id: 'papaya', name: 'มะละกอ', desc: 'ผลยาวรี ผิวเรียบ เนื้อนุ่มฉ่ำน้ำ มีเมล็ดกลม รสหวาน', img: 'pic/มะละกอ.jpg' }
         ];
 
         let focusableElements = [];
@@ -276,30 +276,33 @@
             const wordsContainer = document.getElementById('words-container');
             const btnBackNav = document.getElementById('btn-back-nav');
             
+            imagesContainer.className = 'images-column';
+            wordsContainer.className = 'words-column';
+            
             imagesContainer.innerHTML = '';
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // 1. สร้างฝั่งรูปภาพ
+            // 1. สร้างฝั่งรูปภาพ (อ่านคำบรรยายลักษณะผลไม้)
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
                 imgBtn.dataset.type = 'image';
                 imgBtn.dataset.id = fruit.id;
                 imgBtn.dataset.name = fruit.name;
-                imgBtn.dataset.label = 'รูป ' + fruit.name;
+                imgBtn.dataset.label = 'รูปภาพ ' + fruit.desc; // ใช้คำบรรยายภาพตามตาราง
                 imgBtn.innerHTML = `<img src="${fruit.img}" alt="${fruit.name}">`;
                 imagesContainer.appendChild(imgBtn);
             });
 
-            // 2. สร้างฝั่งบัตรคำ
+            // 2. สร้างฝั่งบัตรคำ (อ่านแค่ชื่อผลไม้)
             fruits.forEach(fruit => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
                 wordBtn.dataset.type = 'word';
                 wordBtn.dataset.id = fruit.id;
                 wordBtn.dataset.name = fruit.name;
-                wordBtn.dataset.label = 'บัตรคำ ' + fruit.name;
+                wordBtn.dataset.label = 'บัตรคำ ' + fruit.name; // อ่านแค่ชื่อผลไม้
                 wordBtn.innerText = fruit.name;
                 wordsContainer.appendChild(wordBtn);
             });
@@ -307,7 +310,7 @@
             const allImages = Array.from(imagesContainer.children);
             const allWords = Array.from(wordsContainer.children);
 
-            // เรียงลำดับปัด: รูปทั้งหมด 10 รูป -> บัตรคำ 10 คำ -> ปุ่มย้อนกลับมุมขวาล่าง
+            // เรียงลำดับปัด: รูปทั้งหมด 10 รูป -> บัตรคำ 10 คำ -> ปุ่มย้อนกลับ
             focusableElements = [...allImages, ...allWords, btnBackNav];
 
             currentIndex = 0;
@@ -397,7 +400,7 @@
                 selectedImageId = id;
                 selectedImageBtn = currentEl;
                 selectedImageBtn.classList.add('selected');
-                speak("เลือกรูป " + name);
+                speak("เลือกรูปภาพ " + name);
             } else if (type === 'word') {
                 if (selectedWordBtn) selectedWordBtn.classList.remove('selected');
                 selectedWordId = id;
@@ -480,7 +483,7 @@
                 if (diffX > 0) {
                     nextItem(); // ปัดขวา = ถัดไป
                 } else {
-                    prevItem(); // ปัดซ้าย = ถอยกลับ
+                    prevItem(); // ปัดซ้าย = ย้อนกลับ
                 }
             } 
             else if (!isSwiping && Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {

@@ -241,12 +241,11 @@
                 if (clear) window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'th-TH';
-                utterance.rate = 1.0;
+                utterance.rate = 0.8; // ปรับความเร็วเสียงอ่านให้ช้าลงตรงนี้ (0.8)
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        // ฟังก์ชั่นสุ่มลำดับอาร์เรย์ (Fisher-Yates Shuffle)
         function shuffleArray(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -282,11 +281,9 @@
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // สุ่มลำดับรายการฝั่งรูปและฝั่งคำบรรยายแยกกัน
             const shuffledImages = shuffleArray(fruits);
             const shuffledWords = shuffleArray(fruits);
 
-            // ฝั่งรูปภาพ: สุ่มตำแหน่ง
             shuffledImages.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
@@ -299,7 +296,6 @@
                 imagesContainer.appendChild(imgBtn);
             });
 
-            // ฝั่งบัตรคำ: สุ่มตำแหน่ง แสดงตัวเลข 1 ถึง 10 แต่อ่านคำบรรยาย (desc)
             shuffledWords.forEach((fruit, index) => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
@@ -307,7 +303,7 @@
                 wordBtn.dataset.id = fruit.id;
                 wordBtn.dataset.name = fruit.name;
                 wordBtn.dataset.label = 'บัตรคำที่ ' + (index + 1) + ' ' + fruit.desc; 
-                wordBtn.innerText = index + 1; // แสดงเลข 1-10 เรียงตามลำดับหน้าจอ
+                wordBtn.innerText = index + 1;
                 wordsContainer.appendChild(wordBtn);
             });
 

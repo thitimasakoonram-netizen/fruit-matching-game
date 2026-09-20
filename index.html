@@ -117,7 +117,7 @@
             display: flex;
             flex-direction: column;
             width: 114px;
-            gap: 10px;
+            gap: 13.33px;
         }
 
         .img-card {
@@ -135,14 +135,10 @@
 
         .word-card {
             width: 114px;
-            height: 58px;
-            font-size: 11px;
-            font-weight: normal;
+            height: 45px;
+            font-size: 15px;
+            font-weight: bold;
             color: #333;
-            padding: 4px;
-            text-align: center;
-            line-height: 1.2;
-            word-break: break-word;
         }
 
         .card-btn {
@@ -276,7 +272,7 @@
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // ฝั่งภาพ: เอาชื่อผลไม้มาใส่
+            // ฝั่งรูปภาพ: อ่าน "รูปภาพ [ชื่อผลไม้]"
             fruits.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
@@ -289,15 +285,15 @@
                 imagesContainer.appendChild(imgBtn);
             });
 
-            // ฝั่งบัตรคำ: เอาคำบรรยาย (desc) มาใส่
+            // ฝั่งบัตรคำ: แสดงตัวหนังสือชื่อผลไม้ (fruit.name) แต่อ่านคำบรรยาย (fruit.desc)
             fruits.forEach(fruit => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
                 wordBtn.dataset.type = 'word';
                 wordBtn.dataset.id = fruit.id;
                 wordBtn.dataset.name = fruit.name;
-                wordBtn.dataset.label = 'บัตรคำ ' + fruit.desc;
-                wordBtn.innerText = fruit.desc;
+                wordBtn.dataset.label = 'บัตรคำ ' + fruit.desc; // เสียงอ่านเป็นคำบรรยาย
+                wordBtn.innerText = fruit.name;                 // ข้อความบนการ์ดเป็นชื่อผลไม้
                 wordsContainer.appendChild(wordBtn);
             });
 

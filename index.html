@@ -136,7 +136,7 @@
         .word-card {
             width: 114px;
             height: 45px;
-            font-size: 15px;
+            font-size: 20px;
             font-weight: bold;
             color: #333;
         }
@@ -246,6 +246,16 @@
             }
         }
 
+        // ฟังก์ชั่นสุ่มลำดับอาร์เรย์ (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
         const splashLogo = document.getElementById('splash-logo');
         const splashBtn = document.getElementById('splash-btn');
         splashElements = [splashLogo, splashBtn];
@@ -272,8 +282,12 @@
             wordsContainer.innerHTML = '';
             focusableElements = [];
 
-            // ฝั่งรูปภาพ: อ่าน "รูปภาพ [ชื่อผลไม้]"
-            fruits.forEach(fruit => {
+            // สุ่มลำดับรายการฝั่งรูปและฝั่งคำบรรยายแยกกัน
+            const shuffledImages = shuffleArray(fruits);
+            const shuffledWords = shuffleArray(fruits);
+
+            // ฝั่งรูปภาพ: สุ่มตำแหน่ง
+            shuffledImages.forEach(fruit => {
                 const imgBtn = document.createElement('div');
                 imgBtn.className = 'card-btn img-card';
                 imgBtn.dataset.type = 'image';
@@ -285,15 +299,15 @@
                 imagesContainer.appendChild(imgBtn);
             });
 
-            // ฝั่งบัตรคำ: โชว์ชื่อผลไม้บนการ์ด แต่อ่านคำบรรยาย (desc)
-            fruits.forEach(fruit => {
+            // ฝั่งบัตรคำ: สุ่มตำแหน่ง แสดงตัวเลข 1 ถึง 10 แต่อ่านคำบรรยาย (desc)
+            shuffledWords.forEach((fruit, index) => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
                 wordBtn.dataset.type = 'word';
                 wordBtn.dataset.id = fruit.id;
                 wordBtn.dataset.name = fruit.name;
-                wordBtn.dataset.label = 'บัตรคำ ' + fruit.desc; 
-                wordBtn.innerText = fruit.name; // <--- โชว์ชื่อผลไม้สั้นๆ บนการ์ด
+                wordBtn.dataset.label = 'บัตรคำที่ ' + (index + 1) + ' ' + fruit.desc; 
+                wordBtn.innerText = index + 1; // แสดงเลข 1-10 เรียงตามลำดับหน้าจอ
                 wordsContainer.appendChild(wordBtn);
             });
 

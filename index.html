@@ -285,15 +285,15 @@
                 imagesContainer.appendChild(imgBtn);
             });
 
-            // ฝั่งบัตรคำ: แสดงตัวหนังสือชื่อผลไม้ (fruit.name) แต่อ่านคำบรรยาย (fruit.desc)
+            // ฝั่งบัตรคำ: โชว์ชื่อผลไม้บนการ์ด แต่อ่านคำบรรยาย (desc)
             fruits.forEach(fruit => {
                 const wordBtn = document.createElement('div');
                 wordBtn.className = 'card-btn word-card';
                 wordBtn.dataset.type = 'word';
                 wordBtn.dataset.id = fruit.id;
                 wordBtn.dataset.name = fruit.name;
-                wordBtn.dataset.label = 'บัตรคำ ' + fruit.desc; // เสียงอ่านเป็นคำบรรยาย
-                wordBtn.innerText = fruit.name;                 // ข้อความบนการ์ดเป็นชื่อผลไม้
+                wordBtn.dataset.label = 'บัตรคำ ' + fruit.desc; 
+                wordBtn.innerText = fruit.name; // <--- โชว์ชื่อผลไม้สั้นๆ บนการ์ด
                 wordsContainer.appendChild(wordBtn);
             });
 
